@@ -16,8 +16,10 @@ import java.util.Set;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -38,7 +40,7 @@ import org.json.simple.parser.ParseException;
 public class ProductJson {
 
     @Context
-    UriInfo uriInfo;
+    UriInfo uriI;
 
     /**
      * Produces a basic JSON Object using the JSON Object API
@@ -128,23 +130,49 @@ public class ProductJson {
 
     @POST
     @Consumes("application/json")
-    //@Produces("text/plain-text")
     public Response doPost(String str) throws ParseException {
-        //JsonReader reader = Json.createReader(new StringReader(str));
-        //JsonObject json = reader.readObject();
         JSONParser parser = new JSONParser();
         JSONObject json = (JSONObject) parser.parse(str);
         Set<String> keySet = json.keySet();
         if (keySet.contains("name") && keySet.contains("description") && keySet.contains("quantity")) {
-            //int productid = update(PropertyManager.getProperty("db_insert"),json.getString("name"),json.getString("description"),json.getString("quantity"));
             int productid = update(PropertyManager.getProperty("db_insert"), json.get("name").toString(), json.get("description").toString(), json.get("quantity").toString());
             if (productid > 0) {
-                String url = uriInfo.getBaseUri() + uriInfo.getPath() + "/" + productid;
+                String url = uriI.getBaseUri() + uriI.getPath() + "/" + productid;
                 return Response.ok(url, MediaType.TEXT_PLAIN).build();
             } else {
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
             }
         }
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+    }
+
+    @PUT
+    @Path("{id}")
+    @Consumes("application/json")
+    public Response doPut(@PathParam("id") Integer id, String str) throws ParseException {
+        JSONParser parser = new JSONParser();
+        JSONObject json = (JSONObject) parser.parse(str);
+        Set<String> keySet = json.keySet();
+        if (keySet.contains("name") && keySet.contains("description") && keySet.contains("quantity")) {
+            int productid = update(PropertyManager.getProperty("db_update"), json.get("name").toString(), json.get("description").toString(), json.get("quantity").toString(), id + "");
+            if (productid > 0) {
+                String url = uriI.getBaseUri() + uriI.getPath();
+                return Response.ok(url, MediaType.TEXT_PLAIN).build();
+            } else {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+            }
+        }
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+    }
+
+    @DELETE
+    @Path("{id}")
+    public Response doDelete(@PathParam("id") Integer id) {
+        int productid = update(PropertyManager.getProperty("db_delete"), id + "");
+        if (productid > 0) {
+            return Response.ok("", MediaType.TEXT_PLAIN).build();
+        } else {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
